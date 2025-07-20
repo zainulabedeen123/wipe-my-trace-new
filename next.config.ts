@@ -4,6 +4,19 @@ const nextConfig: NextConfig = {
   // Enable static optimization
   output: 'standalone',
 
+  // Disable tracing to fix Windows permission issues
+  experimental: {
+    // Disable features that might cause file permission issues
+  },
+
+  // Disable webpack cache to avoid permission issues
+  webpack: (config, { dev }) => {
+    if (dev) {
+      config.cache = false;
+    }
+    return config;
+  },
+
   // Optimize images
   images: {
     formats: ['image/webp', 'image/avif'],
