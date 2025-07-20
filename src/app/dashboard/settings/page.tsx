@@ -39,7 +39,7 @@ export default function SettingsPage() {
     { id: 'security', name: 'Security', icon: '🛡️' },
   ];
 
-  const updateSetting = (category: string, key: string, value: any) => {
+  const updateSetting = (category: string, key: string, value: string | boolean) => {
     setSettings(prev => ({
       ...prev,
       [category]: {
