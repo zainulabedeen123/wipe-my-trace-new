@@ -16,13 +16,13 @@ export async function GET() {
     };
 
     return NextResponse.json(healthCheck, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { 
-        status: 'error', 
+      {
+        status: 'error',
         timestamp: new Date().toISOString(),
-        error: 'Health check failed' 
-      }, 
+        error: 'Health check failed'
+      },
       { status: 500 }
     );
   }

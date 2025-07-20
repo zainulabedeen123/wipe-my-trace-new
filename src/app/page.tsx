@@ -1,4 +1,3 @@
-import Image from "next/image";
 import {
   SignInButton,
   SignUpButton,
@@ -227,7 +226,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">Provide Your Information</h3>
                 <p className="text-slate-600 dark:text-slate-300">
-                  Securely enter your personal details that you want removed from data brokers and companies. We only collect what's necessary for the deletion requests.
+                  Securely enter your personal details that you want removed from data brokers and companies. We only collect what&apos;s necessary for the deletion requests.
                 </p>
               </div>
 
@@ -238,7 +237,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-xl font-semibold text-slate-900 dark:text-white mb-4">Automated Request Generation</h3>
                 <p className="text-slate-600 dark:text-slate-300">
-                  Our system automatically generates legally compliant deletion requests tailored to each jurisdiction's requirements (GDPR, CCPA, etc.).
+                  Our system automatically generates legally compliant deletion requests tailored to each jurisdiction&apos;s requirements (GDPR, CCPA, etc.).
                 </p>
               </div>
 
@@ -440,7 +439,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-slate-600 dark:text-slate-300 italic">
-                "After a data breach exposed my information, I needed to act fast. Wipe My Trace helped me send deletion requests to over 200 companies in just a few clicks. The peace of mind is invaluable."
+                &ldquo;After a data breach exposed my information, I needed to act fast. Wipe My Trace helped me send deletion requests to over 200 companies in just a few clicks. The peace of mind is invaluable.&rdquo;
               </p>
               <div className="flex text-yellow-400 mt-4">
                 {[...Array(5)].map((_, i) => (
@@ -463,7 +462,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-slate-600 dark:text-slate-300 italic">
-                "As a cybersecurity expert, I appreciate the technical rigor behind Wipe My Trace. The legal compliance and automated follow-ups are exactly what the industry needs."
+                &ldquo;As a cybersecurity expert, I appreciate the technical rigor behind Wipe My Trace. The legal compliance and automated follow-ups are exactly what the industry needs.&rdquo;
               </p>
               <div className="flex text-yellow-400 mt-4">
                 {[...Array(5)].map((_, i) => (
@@ -486,7 +485,7 @@ export default function Home() {
                 </div>
               </div>
               <p className="text-slate-600 dark:text-slate-300 italic">
-                "I used the enterprise plan to protect my team's data after we discovered our information was being sold by data brokers. The bulk processing saved us hours of work."
+                &ldquo;I used the enterprise plan to protect my team&apos;s data after we discovered our information was being sold by data brokers. The bulk processing saved us hours of work.&rdquo;
               </p>
               <div className="flex text-yellow-400 mt-4">
                 {[...Array(5)].map((_, i) => (
