@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "build:production": "npm run type-check && npm run lint && npm run build"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.25.4",
@@ -19,6 +21,8 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint": "9.31.0",
+    "eslint-config-next": "15.4.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
