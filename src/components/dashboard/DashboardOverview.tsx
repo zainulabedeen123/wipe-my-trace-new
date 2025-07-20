@@ -28,7 +28,7 @@ export default function DashboardOverview() {
 
       {/* Simple bar chart representation */}
       <div className="space-y-4">
-        {chartData.map((data, index) => (
+        {chartData.map((data) => (
           <div key={data.month} className="flex items-center space-x-4">
             <div className="w-8 text-sm text-slate-600 dark:text-slate-300">
               {data.month}

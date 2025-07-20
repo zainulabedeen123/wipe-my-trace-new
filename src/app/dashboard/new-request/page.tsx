@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import RequestWizard from '@/components/dashboard/RequestWizard';
 
 export default function NewRequestPage() {

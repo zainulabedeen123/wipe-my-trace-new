@@ -60,7 +60,7 @@ export default function RequestWizard() {
     }
   };
 
-  const updateRequestData = (field: string, value: any) => {
+  const updateRequestData = (field: string, value: string | string[]) => {
     setRequestData(prev => ({
       ...prev,
       [field]: value,
@@ -507,7 +507,17 @@ function CompaniesStep({ companies, requestType, onUpdate }: {
 }
 
 function PersonalInfoStep({ personalInfo, onUpdate }: {
-  personalInfo: any;
+  personalInfo: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    address: string;
+    city: string;
+    state: string;
+    zipCode: string;
+    country: string;
+  };
   onUpdate: (field: string, value: string) => void;
 }) {
   return (
