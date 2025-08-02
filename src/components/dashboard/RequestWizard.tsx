@@ -282,7 +282,6 @@ export default function RequestWizard() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
