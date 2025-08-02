@@ -1,0 +1,290 @@
+// Wipe My Trace - Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model - extends Clerk user data
+model User {
+  id        String   @id @default(cuid())
+  clerkId   String   @unique
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  phone     String?
+
+  // Address information
+  address   String?
+  city      String?
+  state     String?
+  zipCode   String?
+  country   String?
+
+  // Preferences
+  defaultJurisdiction Jurisdiction @default(CCPA)
+  timezone           String        @default("America/New_York")
+  language           String        @default("en")
+
+  // Subscription
+  subscriptionTier   SubscriptionTier @default(INDIVIDUAL)
+  subscriptionStatus String           @default("active")
+  stripeCustomerId   String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  deletionRequests DeletionRequest[]
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+// Company/Data Broker model
+model Company {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  website     String?
+  email       String?
+  category    CompanyCategory
+  description String?
+
+  // Contact information
+  contactEmail     String?
+  privacyEmail     String?
+  dpoEmail         String? // Data Protection Officer
+  phone            String?
+  address          String?
+
+  // Compliance information
+  supportedJurisdictions Jurisdiction[]
+  difficulty             Difficulty    @default(MEDIUM)
+  avgResponseTime        Int           @default(30) // days
+  successRate            Float         @default(0.0)
+
+  // Status
+  isActive    Boolean @default(true)
+  isVerified  Boolean @default(false)
+  lastUpdated DateTime @default(now())
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  deletionRequests DeletionRequest[]
+  emailTemplates   EmailTemplate[]
+
+  @@map("companies")
+}
+
+// Deletion Request model
+model DeletionRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  companyId   String
+
+  // Request details
+  jurisdiction    Jurisdiction
+  requestType     RequestType     @default(INDIVIDUAL)
+  status          RequestStatus   @default(PENDING)
+  priority        Priority        @default(NORMAL)
+
+  // Personal information used in request
+  requestorName   String
+  requestorEmail  String
+  requestorPhone  String?
+  requestorAddress String?
+
+  // Request lifecycle
+  createdAt       DateTime  @default(now())
+  sentAt          DateTime?
+  acknowledgedAt  DateTime?
+  completedAt     DateTime?
+
+  // Estimated and actual completion
+  estimatedCompletion DateTime?
+  actualCompletion    DateTime?
+
+  // Communication
+  emailsSent      Int     @default(0)
+  lastEmailSent   DateTime?
+  responseReceived Boolean @default(false)
+
+  // Cost and billing
+  cost            Float   @default(3.50)
+  isPaid          Boolean @default(false)
+
+  // Notes and tracking
+  notes           String?
+  internalNotes   String?
+
+  // Relations
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company         Company           @relation(fields: [companyId], references: [id])
+  emailLogs       EmailLog[]
+  auditLogs       AuditLog[]
+
+  @@map("deletion_requests")
+}
+
+// Email Template model
+model EmailTemplate {
+  id           String       @id @default(cuid())
+  companyId    String?
+  jurisdiction Jurisdiction
+  templateType TemplateType
+
+  // Template content
+  subject      String
+  body         String       // HTML content with placeholders
+  plainText    String?      // Plain text version
+
+  // Template metadata
+  language     String       @default("en")
+  isDefault    Boolean      @default(false)
+  isActive     Boolean      @default(true)
+
+  // Timestamps
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Relations
+  company      Company?     @relation(fields: [companyId], references: [id])
+  emailLogs    EmailLog[]
+
+  @@map("email_templates")
+}
+
+// Email Log model for tracking sent emails
+model EmailLog {
+  id                String          @id @default(cuid())
+  deletionRequestId String
+  templateId        String?
+
+  // Email details
+  toEmail           String
+  fromEmail         String
+  subject           String
+  body              String
+
+  // Delivery tracking
+  sentAt            DateTime        @default(now())
+  deliveredAt       DateTime?
+  openedAt          DateTime?
+  clickedAt         DateTime?
+
+  // Status
+  status            EmailStatus     @default(SENT)
+  errorMessage      String?
+
+  // Relations
+  deletionRequest   DeletionRequest @relation(fields: [deletionRequestId], references: [id], onDelete: Cascade)
+  template          EmailTemplate?  @relation(fields: [templateId], references: [id])
+
+  @@map("email_logs")
+}
+
+// Audit Log model for compliance tracking
+model AuditLog {
+  id                String          @id @default(cuid())
+  userId            String?
+  deletionRequestId String?
+
+  // Action details
+  action            String          // e.g., "request_created", "email_sent", "status_updated"
+  entity            String          // e.g., "DeletionRequest", "User", "Company"
+  entityId          String
+
+  // Change tracking
+  oldValues         Json?
+  newValues         Json?
+
+  // Context
+  ipAddress         String?
+  userAgent         String?
+
+  // Timestamp
+  createdAt         DateTime        @default(now())
+
+  // Relations
+  user              User?           @relation(fields: [userId], references: [id])
+  deletionRequest   DeletionRequest? @relation(fields: [deletionRequestId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// Enums
+enum Jurisdiction {
+  GDPR
+  CCPA
+  PIPEDA
+  LGPD
+}
+
+enum CompanyCategory {
+  DATA_BROKER
+  CREDIT_BUREAU
+  PEOPLE_SEARCH
+  MARKETING
+  SOCIAL_MEDIA
+  ADVERTISING
+  ANALYTICS
+  OTHER
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum RequestStatus {
+  PENDING
+  SENT
+  ACKNOWLEDGED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  REJECTED
+  CANCELLED
+}
+
+enum RequestType {
+  INDIVIDUAL
+  BULK
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum TemplateType {
+  INITIAL_REQUEST
+  FOLLOW_UP
+  REMINDER
+  ESCALATION
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+enum SubscriptionTier {
+  INDIVIDUAL
+  ENTERPRISE
+}

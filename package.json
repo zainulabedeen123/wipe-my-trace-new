@@ -9,11 +9,17 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "build:production": "npm run type-check && npm run lint && npm run build"
+    "build:production": "npm run type-check && npm run lint && npm run build",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.25.4",
+    "@prisma/client": "^6.13.0",
     "next": "15.4.2",
+    "prisma": "^6.13.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
@@ -25,6 +31,7 @@
     "eslint": "9.31.0",
     "eslint-config-next": "15.4.2",
     "tailwindcss": "^4",
+    "tsx": "^4.20.3",
     "typescript": "^5"
   }
 }
