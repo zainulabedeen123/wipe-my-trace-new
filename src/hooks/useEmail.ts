@@ -86,7 +86,7 @@ export function useEmailSending() {
 
   const sendBulkEmails = async (requestIds: string[]): Promise<{
     success: boolean
-    results?: any[]
+    results?: { requestId: string; success: boolean; messageId?: string; error?: string }[]
     successCount?: number
     failureCount?: number
     error?: string

@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 import nodemailer from 'nodemailer'
 import { prisma } from '@/lib/prisma'
-import { EmailStatus, TemplateType } from '@prisma/client'
+import { EmailStatus } from '@prisma/client'
 
 // Email service configuration
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -346,7 +346,7 @@ export class EmailService {
   }
 
   // Process email webhooks (for tracking opens, clicks, etc.)
-  static async processEmailWebhook(webhookData: any) {
+  static async processEmailWebhook(webhookData: { messageId?: string; event?: string; timestamp?: string }) {
     // This would handle webhooks from Resend or other email providers
     // to track email opens, clicks, bounces, etc.
     
@@ -364,7 +364,7 @@ export class EmailService {
 
     if (!emailLog) return
 
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
 
     switch (event) {
       case 'delivered':

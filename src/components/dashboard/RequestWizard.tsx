@@ -5,7 +5,7 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { createDeletionRequest, createBulkDeletionRequests } from '@/hooks/useDeletionRequests';
 import { useCompanies } from '@/hooks/useCompanies';
-import { Jurisdiction, RequestType } from '@prisma/client';
+import { Jurisdiction } from '@prisma/client';
 
 interface RequestData {
   requestType: 'single' | 'bulk';

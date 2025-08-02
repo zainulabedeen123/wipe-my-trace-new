@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     )
 
     const invalidRequests = requests.filter(
-      (request, index) => 
+      (request) =>
         !request || 
         request.userId !== userId || 
         request.status !== 'PENDING'

@@ -11,7 +11,7 @@ export default function DataBrokersPage() {
   const [selectedCategory, setSelectedCategory] = useState<CompanyCategory | 'All'>('All');
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<Jurisdiction | 'All'>('All');
   const [sortBy, setSortBy] = useState('name');
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
 
   // Prepare filters for API
   const filters: CompanyFilters = {

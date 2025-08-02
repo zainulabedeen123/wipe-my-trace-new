@@ -7,10 +7,10 @@ export async function POST() {
     
     // Check current state
     const tables = await prisma.$queryRaw`
-      SELECT table_name 
-      FROM information_schema.tables 
+      SELECT table_name
+      FROM information_schema.tables
       WHERE table_schema = 'public'
-    ` as any[]
+    ` as { table_name: string }[]
     
     console.log(`Found ${tables.length} existing tables:`, tables.map(t => t.table_name))
     
@@ -38,7 +38,7 @@ export async function POST() {
           END $$;
         `)
         console.log(`✅ Enum ${enumDef.name} created/verified`)
-      } catch (error) {
+      } catch (enumError) {
         console.log(`⚠️ Enum ${enumDef.name} might already exist`)
       }
     }
@@ -240,10 +240,10 @@ export async function POST() {
     
     // Final verification
     const finalTables = await prisma.$queryRaw`
-      SELECT table_name 
-      FROM information_schema.tables 
+      SELECT table_name
+      FROM information_schema.tables
       WHERE table_schema = 'public'
-    ` as any[]
+    ` as { table_name: string }[]
     
     console.log('🎉 Database setup completed!')
     console.log(`Final table count: ${finalTables.length}`)

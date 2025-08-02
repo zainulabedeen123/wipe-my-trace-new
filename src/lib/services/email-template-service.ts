@@ -1,9 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import { Jurisdiction, TemplateType } from '@prisma/client'
-import { 
-  getTemplate, 
-  generateEmail, 
-  calculateDeadline, 
+import {
+  getTemplate,
+  calculateDeadline,
   TemplateVariables,
   FOLLOW_UP_TEMPLATE,
   processTemplate

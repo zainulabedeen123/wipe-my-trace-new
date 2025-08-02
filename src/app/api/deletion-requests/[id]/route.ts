@@ -93,7 +93,7 @@ export async function PUT(
 
     // Remove undefined values
     const updateData = Object.fromEntries(
-      Object.entries(allowedUpdates).filter(([_, value]) => value !== undefined)
+      Object.entries(allowedUpdates).filter(([, value]) => value !== undefined)
     )
 
     if (Object.keys(updateData).length === 0) {

@@ -15,17 +15,17 @@ export async function GET() {
     
     // Check if any tables exist
     const tables = await prisma.$queryRaw`
-      SELECT table_name 
-      FROM information_schema.tables 
+      SELECT table_name
+      FROM information_schema.tables
       WHERE table_schema = 'public'
-    `
-    
+    ` as { table_name: string }[]
+
     return NextResponse.json({
       success: true,
       message: 'Database connection successful',
       tablesCount: tables.length,
-      tables: tables.map((t: any) => t.table_name),
-      version: (result as any)[0]?.version?.substring(0, 50) + '...'
+      tables: tables.map((t) => t.table_name),
+      version: (result as { version: string }[])[0]?.version?.substring(0, 50) + '...'
     })
     
   } catch (error) {

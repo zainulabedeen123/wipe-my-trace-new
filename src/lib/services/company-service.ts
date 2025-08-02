@@ -72,7 +72,7 @@ export class CompanyService {
 
   // Get all companies with filters
   static async getCompanies(filters: CompanyFilters = {}, page = 1, limit = 50) {
-    const where: any = {}
+    const where: Record<string, unknown> = {}
 
     if (filters.category) {
       where.category = filters.category
@@ -175,7 +175,7 @@ export class CompanyService {
       }
     })
 
-    const avgResponseTime = await prisma.deletionRequest.aggregate({
+    await prisma.deletionRequest.aggregate({
       where: {
         companyId,
         status: 'COMPLETED',

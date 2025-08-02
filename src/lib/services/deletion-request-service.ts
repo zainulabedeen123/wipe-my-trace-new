@@ -123,7 +123,7 @@ export class DeletionRequestService {
     page = 1,
     limit = 50
   ) {
-    const where: any = {}
+    const where: Record<string, unknown> = {}
 
     if (filters.userId) where.userId = filters.userId
     if (filters.companyId) where.companyId = filters.companyId
@@ -279,7 +279,7 @@ export class DeletionRequestService {
       completedRequests,
       failedRequests,
       totalCost,
-      avgResponseTime
+      // avgResponseTime
     ] = await Promise.all([
       prisma.deletionRequest.count({ where }),
       prisma.deletionRequest.count({ where: { ...where, status: RequestStatus.PENDING } }),
@@ -372,8 +372,8 @@ export class DeletionRequestService {
     action: string,
     entity: string,
     entityId: string,
-    oldValues: any,
-    newValues: any,
+    oldValues: Record<string, unknown>,
+    newValues: Record<string, unknown>,
     userId?: string
   ) {
     return await prisma.auditLog.create({
@@ -471,7 +471,7 @@ export class DeletionRequestService {
       }
 
       return acc
-    }, {} as Record<string, any>)
+    }, {} as Record<string, { completed: number; pending: number }>)
 
     return Object.entries(trends).map(([month, data]) => ({
       month,
