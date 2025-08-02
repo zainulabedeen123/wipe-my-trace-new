@@ -1,10 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { createDeletionRequest, createBulkDeletionRequests } from '@/hooks/useDeletionRequests';
+import { useCompanies } from '@/hooks/useCompanies';
+import { Jurisdiction, RequestType } from '@prisma/client';
 
 interface RequestData {
   requestType: 'single' | 'bulk';
-  jurisdiction: 'GDPR' | 'CCPA' | 'PIPEDA' | 'LGPD';
+  jurisdiction: Jurisdiction;
   companies: string[];
   personalInfo: {
     firstName: string;
@@ -29,21 +34,26 @@ const steps = [
 ];
 
 export default function RequestWizard() {
+  const { user } = useUser();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const [requestData, setRequestData] = useState<RequestData>({
     requestType: 'single',
-    jurisdiction: 'GDPR',
+    jurisdiction: Jurisdiction.CCPA,
     companies: [],
     personalInfo: {
-      firstName: '',
-      lastName: '',
-      email: '',
+      firstName: user?.firstName || '',
+      lastName: user?.lastName || '',
+      email: user?.primaryEmailAddress?.emailAddress || '',
       phone: '',
       address: '',
       city: '',
       state: '',
       zipCode: '',
-      country: '',
+      country: 'United States',
     },
     additionalInfo: '',
   });
@@ -75,6 +85,63 @@ export default function RequestWizard() {
         [field]: value,
       },
     }));
+  };
+
+  const handleSubmit = async () => {
+    if (!user) {
+      setSubmitError('You must be logged in to submit a request');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const requestorName = `${requestData.personalInfo.firstName} ${requestData.personalInfo.lastName}`.trim();
+      const requestorAddress = [
+        requestData.personalInfo.address,
+        requestData.personalInfo.city,
+        requestData.personalInfo.state,
+        requestData.personalInfo.zipCode
+      ].filter(Boolean).join(', ');
+
+      if (requestData.requestType === 'bulk') {
+        // Create bulk deletion requests
+        const result = await createBulkDeletionRequests({
+          companyIds: requestData.companies,
+          jurisdiction: requestData.jurisdiction,
+          requestorName,
+          requestorEmail: requestData.personalInfo.email,
+          requestorPhone: requestData.personalInfo.phone || undefined,
+          requestorAddress: requestorAddress || undefined
+        });
+
+        // Redirect to success page with results
+        router.push(`/dashboard/requests?success=bulk&count=${result.successCount}`);
+      } else {
+        // Create single deletion request
+        if (requestData.companies.length === 0) {
+          setSubmitError('Please select at least one company');
+          return;
+        }
+
+        const result = await createDeletionRequest({
+          companyId: requestData.companies[0],
+          jurisdiction: requestData.jurisdiction,
+          requestorName,
+          requestorEmail: requestData.personalInfo.email,
+          requestorPhone: requestData.personalInfo.phone || undefined,
+          requestorAddress: requestorAddress || undefined
+        });
+
+        // Redirect to success page
+        router.push(`/dashboard/requests?success=single&id=${result.id}`);
+      }
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to submit request');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -184,15 +251,37 @@ export default function RequestWizard() {
           </button>
         ) : (
           <button
-            onClick={() => {
-              // TODO: Submit request
-              console.log('Submitting request:', requestData);
-            }}
-            className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-green-400 rounded-md disabled:cursor-not-allowed"
           >
-            Submit Request
+            {isSubmitting ? 'Submitting...' : 'Submit Request'}
           </button>
         )}
+      </div>
+
+      {/* Error Display */}
+      {submitError && (
+        <div className="px-6 pb-6">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Error submitting request
+                </h3>
+                <div className="mt-2 text-sm text-red-700 dark:text-red-300">
+                  <p>{submitError}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );
@@ -272,28 +361,28 @@ function RequestTypeStep({ requestType, onUpdate }: { requestType: string; onUpd
   );
 }
 
-function JurisdictionStep({ jurisdiction, onUpdate }: { jurisdiction: string; onUpdate: (value: 'GDPR' | 'CCPA' | 'PIPEDA' | 'LGPD') => void }) {
+function JurisdictionStep({ jurisdiction, onUpdate }: { jurisdiction: Jurisdiction; onUpdate: (value: Jurisdiction) => void }) {
   const jurisdictions = [
     {
-      value: 'GDPR',
+      value: Jurisdiction.GDPR,
       name: 'GDPR (EU/UK)',
       description: 'General Data Protection Regulation - European Union and United Kingdom',
       regions: 'EU, UK, EEA',
     },
     {
-      value: 'CCPA',
+      value: Jurisdiction.CCPA,
       name: 'CCPA (California)',
       description: 'California Consumer Privacy Act - United States (California)',
       regions: 'California, USA',
     },
     {
-      value: 'PIPEDA',
+      value: Jurisdiction.PIPEDA,
       name: 'PIPEDA (Canada)',
       description: 'Personal Information Protection and Electronic Documents Act - Canada',
       regions: 'Canada',
     },
     {
-      value: 'LGPD',
+      value: Jurisdiction.LGPD,
       name: 'LGPD (Brazil)',
       description: 'Lei Geral de Proteção de Dados - Brazil',
       regions: 'Brazil',
@@ -357,24 +446,14 @@ function CompaniesStep({ companies, requestType, onUpdate }: {
 }) {
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Mock data - in real app, this would come from a database
-  const availableCompanies = [
-    { id: '1', name: 'Acxiom Corporation', category: 'Data Broker', description: 'Consumer data and analytics' },
-    { id: '2', name: 'Epsilon Data Management', category: 'Marketing', description: 'Email marketing and data services' },
-    { id: '3', name: 'LexisNexis Risk Solutions', category: 'Data Broker', description: 'Background checks and data aggregation' },
-    { id: '4', name: 'Experian Information Solutions', category: 'Credit Bureau', description: 'Credit reporting and data services' },
-    { id: '5', name: 'TransUnion LLC', category: 'Credit Bureau', description: 'Credit reporting and risk management' },
-    { id: '6', name: 'Equifax Inc.', category: 'Credit Bureau', description: 'Credit reporting and data analytics' },
-    { id: '7', name: 'Spokeo Inc.', category: 'People Search', description: 'People search and background information' },
-    { id: '8', name: 'BeenVerified LLC', category: 'People Search', description: 'Background checks and people search' },
-    { id: '9', name: 'Intelius Inc.', category: 'People Search', description: 'Public records and background reports' },
-    { id: '10', name: 'PeopleFinders.com', category: 'People Search', description: 'People search and contact information' },
-  ];
+  // Use real companies from API
+  const { data: companiesData, loading } = useCompanies({
+    search: searchTerm || undefined,
+    isActive: true
+  }, 1, 100);
 
-  const filteredCompanies = availableCompanies.filter(company =>
-    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    company.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const availableCompanies = companiesData?.companies || [];
+  const filteredCompanies = availableCompanies;
 
   const toggleCompany = (companyId: string) => {
     if (requestType === 'single') {
@@ -391,6 +470,10 @@ function CompaniesStep({ companies, requestType, onUpdate }: {
   const selectAllPopular = () => {
     const popularCompanies = availableCompanies.slice(0, 5).map(c => c.id);
     onUpdate(popularCompanies);
+  };
+
+  const formatCategory = (category: string) => {
+    return category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (
@@ -456,9 +539,24 @@ function CompaniesStep({ companies, requestType, onUpdate }: {
         </div>
       )}
 
+      {/* Loading State */}
+      {loading && (
+        <div className="space-y-3">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="border border-slate-300 dark:border-slate-600 rounded-lg p-4">
+              <div className="animate-pulse">
+                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Companies List */}
-      <div className="space-y-3 max-h-96 overflow-y-auto">
-        {filteredCompanies.map((company) => (
+      {!loading && (
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {filteredCompanies.map((company) => (
           <div
             key={company.id}
             className={`relative rounded-lg border p-4 cursor-pointer ${
@@ -483,7 +581,7 @@ function CompaniesStep({ companies, requestType, onUpdate }: {
                     {company.name}
                   </label>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-                    {company.category}
+                    {formatCategory(company.category)}
                   </span>
                 </div>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -491,11 +589,12 @@ function CompaniesStep({ companies, requestType, onUpdate }: {
                 </p>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-      {filteredCompanies.length === 0 && (
+      {!loading && filteredCompanies.length === 0 && (
         <div className="text-center py-8">
           <p className="text-sm text-slate-500 dark:text-slate-400">
             No companies found matching your search.
