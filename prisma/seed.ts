@@ -1,4 +1,5 @@
 import { PrismaClient, Jurisdiction, CompanyCategory, Difficulty, TemplateType } from '@prisma/client'
+import { EmailTemplateService } from '../src/lib/services/email-template-service'
 
 const prisma = new PrismaClient()
 
@@ -139,6 +140,11 @@ async function main() {
   }
 
   console.log('✅ Companies created successfully')
+
+  // Seed email templates
+  console.log('Creating email templates...')
+  await EmailTemplateService.seedDefaultTemplates()
+
   console.log('🌱 Database seeded successfully!')
 }
 
